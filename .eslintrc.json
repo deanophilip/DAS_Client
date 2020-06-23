@@ -31,7 +31,14 @@
         "semi": [
             "error",
             "always"
-        ],
-        "no-var-requires": false
-    }
+        ]
+    },
+    "overrides": [
+        {
+          "files": ["*.js"],
+          "rules": {
+            "typescript/no-var-requires": "off"
+          }
+        }
+    ]
 }

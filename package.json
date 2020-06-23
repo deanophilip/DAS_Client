@@ -6,7 +6,7 @@
   "types": "dist/DAS_Client.d.ts",
   "scripts": {
     "release": "standard-version",
-    "prepublish": "npm run build && npm run release",
+    "prepublish": "npm run release && npm run build",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

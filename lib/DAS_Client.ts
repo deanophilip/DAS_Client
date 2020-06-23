@@ -41,7 +41,7 @@ export class DAS_Client extends Duplex{
 		this.host = host;
 		this.port = port;
 		this._readingPaused = false;
-		this.connect(host = this.host, port = this.port);
+		return this.connect(host = this.host, port = this.port);
 	}
 
 	connect(host: string, port: number): DAS_Client {

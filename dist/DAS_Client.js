@@ -37,8 +37,7 @@ var DAS_Client = /** @class */ (function (_super) {
         _this.host = host;
         _this.port = port;
         _this._readingPaused = false;
-        _this.connect(host = _this.host, port = _this.port);
-        return _this;
+        return _this.connect(host = _this.host, port = _this.port);
     }
     DAS_Client.prototype.connect = function (host, port) {
         this._wrapSocket(new net_1.Socket());
