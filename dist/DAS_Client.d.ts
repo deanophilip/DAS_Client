@@ -21,7 +21,7 @@ export declare class DAS_Client extends Duplex {
     private _readingPaused;
     protected _socket: Socket;
     constructor(host: string, port?: number);
-    connect(host: string, port: number): this;
+    connect(host: string, port: number): DAS_Client;
     _wrapSocket(socket: Socket): void;
     private _onReadable;
     /**
@@ -32,9 +32,9 @@ export declare class DAS_Client extends Duplex {
     */
     _read(): void;
     /**
-Implements the writeable stream method `_write` by serializing
-the object and pushing the data to the underlying socket.
-*/
+    Implements the writeable stream method `_write` by serializing
+    the object and pushing the data to the underlying socket.
+    */
     _write(obj: DAS_Body, encoding: any, cb: ((err?: Error | undefined) => void) | undefined): void;
     /**
     Implements the writeable stream method `_final` used when

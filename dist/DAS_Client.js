@@ -16,18 +16,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DAS_Client = void 0;
 var net_1 = require("net");
 var stream_1 = require("stream");
-var async = require('async');
-var net = require('net');
-var events = require('events');
-var uuid = require('uuid');
-var xmlToJsonParser = require('fast-xml-parser');
+//import uuid, not @types/uuid
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+var uuid = require("uuid");
+//import as JS
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+var xmlToJsonParser = require("fast-xml-parser");
+//import as JS
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 var jsonToXmlParser = require("fast-xml-parser").j2xParser;
-var he = require('he');
 var DAS_Client = /** @class */ (function (_super) {
     __extends(DAS_Client, _super);
     function DAS_Client(host, port) {
         if (port === void 0) { port = 64079; }
         var _this = _super.call(this, { objectMode: true }) || this;
+        // eslint-disable-next-line @typescript-eslint/no-inferrable-types
         _this.uuid = "";
         _this._readingPaused = false;
         _this.uuid = new uuid.uuidv4();
@@ -45,15 +48,15 @@ var DAS_Client = /** @class */ (function (_super) {
     DAS_Client.prototype._wrapSocket = function (socket) {
         var _this = this;
         this._socket = socket;
-        this._socket.on('close', function (hadError) { return _this.emit('close', hadError); });
-        this._socket.on('connect', function () { return _this.emit('connect'); });
-        this._socket.on('drain', function () { return _this.emit('drain'); });
-        this._socket.on('end', function () { return _this.emit('end'); });
-        this._socket.on('error', function (err) { return _this.emit('error', err); });
-        this._socket.on('lookup', function (err, address, family, host) { return _this.emit('lookup', err, address, family, host); }); // prettier-ignore
-        this._socket.on('ready', function () { return _this.emit('ready'); });
-        this._socket.on('timeout', function () { return _this.emit('timeout'); });
-        this._socket.on('readable', this._onReadable.bind(this));
+        this._socket.on("close", function (hadError) { return _this.emit("close", hadError); });
+        this._socket.on("connect", function () { return _this.emit("connect"); });
+        this._socket.on("drain", function () { return _this.emit("drain"); });
+        this._socket.on("end", function () { return _this.emit("end"); });
+        this._socket.on("error", function (err) { return _this.emit("error", err); });
+        this._socket.on("lookup", function (err, address, family, host) { return _this.emit("lookup", err, address, family, host); }); // prettier-ignore
+        this._socket.on("ready", function () { return _this.emit("ready"); });
+        this._socket.on("timeout", function () { return _this.emit("timeout"); });
+        this._socket.on("readable", this._onReadable.bind(this));
     };
     DAS_Client.prototype._onReadable = function () {
         // Read all the data until one of two conditions is met
@@ -72,7 +75,7 @@ var DAS_Client = /** @class */ (function (_super) {
             //let len = lenBuf.readUInt32BE();
             // ensure that we don't exceed the max size of 256KiB
             if (len > Math.pow(2, 18)) {
-                this._socket.destroy(new Error('Max length exceeded'));
+                this._socket.destroy(new Error("Max length exceeded"));
                 console.log("Max length exceeded");
                 return;
             }
@@ -91,8 +94,9 @@ var DAS_Client = /** @class */ (function (_super) {
                 arrayMode: false
             };
             var valid = xmlToJsonParser.validate(body);
+            var jsonObj = void 0;
             if (valid === true) { //optional (it'll return an object in case it's not valid)
-                var jsonObj = xmlToJsonParser.parse(body, options);
+                jsonObj = xmlToJsonParser.parse(body, options);
             }
             else {
                 console.log(valid.message);
@@ -102,7 +106,7 @@ var DAS_Client = /** @class */ (function (_super) {
             // Try to parse the data and if it fails destroy the socket.
             var json = void 0;
             try {
-                json = JSON.parse(body);
+                json = JSON.parse(jsonObj);
             }
             catch (ex) {
                 this._socket.destroy(ex);
@@ -142,9 +146,9 @@ var DAS_Client = /** @class */ (function (_super) {
         setImmediate(this._onReadable.bind(this));
     };
     /**
-Implements the writeable stream method `_write` by serializing
-the object and pushing the data to the underlying socket.
-*/
+    Implements the writeable stream method `_write` by serializing
+    the object and pushing the data to the underlying socket.
+    */
     DAS_Client.prototype._write = function (obj, encoding, cb) {
         var parser = new jsonToXmlParser();
         var xmlBody = parser.parse(obj);
@@ -164,6 +168,7 @@ the object and pushing the data to the underlying socket.
     */
     DAS_Client.prototype._final = function (cb) {
         this._socket.end(cb);
+        return;
     };
     DAS_Client.prototype.setIPAddress = function (newHost) {
         //close current connection
