@@ -1,0 +1,23 @@
+{
+  "name": "DAS_Client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/DAS_Client.js",
+  "types": "dist/DAS_Client.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^3.9.5"
+  },
+  "dependencies": {
+    "@types/node": "^14.0.13",
+    "fast-xml-parser": "^3.17.4",
+    "uuid": "^8.1.0"
+  }
+}
