@@ -1,10 +1,11 @@
 //JS include for the client
 var DAS_Client = require('das-client').DAS_Client;
-//var DAS_Root = require('das-client').DAS_Root;
+var events = require('events');
 
 async function run() {  
 	//create new instance of client (connects to the host in the constructor)
 	let crestron = new DAS_Client("192.168.1.215", 64079);
+	var eventEmitter = new events.EventEmitter();
 
 	//add callbacks to events
 	//called when the socket connects
@@ -29,9 +30,13 @@ async function run() {
 		//the index
 		console.log(data.DAS_transmission.body.index);
 		//the command
-		console.log(data.DAS_transmission.body.signalType);
+		console.log(data.DAS_transmission.body.command);
 		//the value
 		console.log(data.DAS_transmission.body.value);
+
+		eventEmitter.emit(data.DAS_transmission.body.signalType + ":" + data.DAS_transmission.body.index + ":" + data.DAS_transmission.body.command , data.DAS_transmission.body.value);
+
+		//add event emitter here for each signal:index:command, with the value as the parameter
 
 		//function that can be used to write a message back to crestron using the same JS object notation as above.
 		//crestron.write(data.DAS_transmission.body);
