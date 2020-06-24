@@ -1,13 +1,13 @@
 {
   "name": "das-client",
-  "version": "0.0.6",
+  "version": "1.0.1",
   "description": "",
   "main": "dist/DAS_Client.js",
   "types": "dist/DAS_Client.d.ts",
   "scripts": {
     "release": "standard-version",
-    "prepublish": "npm run release && npm run build",
-    "build": "tsc",
+    "prepublish": "npm run build",
+    "build": "npm run release && tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
