@@ -7,7 +7,11 @@ Dealer Name: HPE
 System Name: DAS Server
 System Number:
 Programmer: DOP
-Comments:
+Comments: 
+
+V1.0.0 Initial Release
+*Creates DAS server with max 50 inputs/outputs to communicate with third party.
+
 */
 
 /*******************************************************************************************
@@ -15,7 +19,7 @@ Comments:
   (Uncomment and declare compiler directives as needed)
 *******************************************************************************************/
 // #ENABLE_DYNAMIC
-#SYMBOL_NAME "DAS Server"
+#SYMBOL_NAME "DAS_Server"
 #HINT "TCP Server based on Digital, Analog and Serial signals so that action is similar to a touch panel"
 #DEFINE_CONSTANT MAX_INPUTS 50
 #DEFINE_CONSTANT MAX_STRING_LENGTH 256
@@ -38,19 +42,19 @@ Comments:
 // #ENCODING_INHERIT_FROM_PROGRAM
 
 #HELP_BEGIN
-DAS Server Module
+DAS_Server Module
 
 This is a server intended for use with other programming interfaces (node.js),
 that will interact similar to a touch panel.
 
 The module creates a TCP Server on the Creston system (only tested on an MC3),
-which communicates with the third party interface using a plain text socket.
+which communicates with the third party interface using a plain text socket with XML encoded commands.
 
 The third party interface communicates with the Server using three commands:
 
-Set - Sets the status
-Get - Gets the status from the Crestron system
-Event - Push a status change on the Crestron system to third party
+Set - Sets the status of the output from the client. Responds after processing logic with a "setResponse" event.
+Get - Gets the status from the Crestron system. Response with a "getReponse" event.
+Event - Push a status change on the Crestron system to third party client.
 #HELP_END
 
 
@@ -152,9 +156,9 @@ function StartServer() {
 	SIGNED_INTEGER status;
 	status = SocketServerStartListen(DAS_Server, IPAddr$, Port);
 	if (status < 0) {
-		Print("Error listening to %s on port %u (status: %d)", IPAddr$, Port, status);
+		TRACE("Error listening to %s on port %u (status: %d)", IPAddr$, Port, status);
 	} else {
-        Print("Server started to %s on port %u (status: %d)", IPAddr$, Port, status);
+        TRACE("Server started to %s on port %u (status: %d)", IPAddr$, Port, status);
 	}
 }
 
@@ -166,12 +170,13 @@ function SocketTx(STRING ServerTx) {
 	bodyLength = LEN(ServerTx);
 
 	Temp$ = "<DAS_transmission>" + "<bodySize>" + ItoA(bodyLength) + "</bodySize>" + "<body>" + ServerTx + "</body>" + "</DAS_transmission>";
-    iStatus = SocketSend(DAS_Server, Temp$);
+    TRACE("Trying to send %s\n", Temp$);
+	iStatus = SocketSend(DAS_Server, Temp$);
 
     if (iStatus < 0) {
 		TRACE("Error Sending to DAS_Server: %d\n", iStatus);
     } else {
-		//TRACE("Sent %s\n", Temp$);
+		TRACE("Sent %s\n", Temp$);
 	}
 }
 
@@ -255,13 +260,13 @@ function CmdParser(STRING ServerRx) {
 
     if(data.Cmd = "get"){
     	if(data.SignalType = "digital"){
-			CmdBuilder(data.SignalType, ItoA(data.Index), "get", ItoA(Digital_TX[data.Index]));
+			CmdBuilder(data.SignalType, ItoA(data.Index), "getResponse", ItoA(Digital_TX[data.Index]));
 		}
 		else if(data.SignalType = "analog"){
-			CmdBuilder(data.SignalType, ItoA(data.Index), "get", ItoA(Analog_TX[data.Index]));
+			CmdBuilder(data.SignalType, ItoA(data.Index), "getResponse", ItoA(Analog_TX[data.Index]));
 		}
 		else if(data.SignalType = "serial"){
-			CmdBuilder(data.SignalType, ItoA(data.Index), "get", Serial_TX[data.Index]);
+			CmdBuilder(data.SignalType, ItoA(data.Index), "getResponse", Serial_TX[data.Index]);
 		}
 	}
     else if(data.Cmd = "set"){
@@ -273,17 +278,17 @@ function CmdParser(STRING ServerRx) {
 				Digital_RX[data.Index] = ATOI(data.Value);
 			}
 			PROCESSLOGIC();
-			CmdBuilder(data.SignalType, ItoA(data.Index), "set", ItoA(Digital_TX[data.Index]));
+			CmdBuilder(data.SignalType, ItoA(data.Index), "setResponse", ItoA(Digital_TX[data.Index]));
 		}
 		else if(data.SignalType = "analog"){
 			Analog_RX[data.Index] = ATOI(data.Value);
 			PROCESSLOGIC();
-			CmdBuilder(data.SignalType, ItoA(data.Index), "set", ItoA(Analog_TX[data.Index]));
+			CmdBuilder(data.SignalType, ItoA(data.Index), "setResponse", ItoA(Analog_TX[data.Index]));
 		}
 		else if(data.SignalType = "serial"){
 			Serial_RX[data.Index] = data.Value;
 			PROCESSLOGIC();
-			CmdBuilder(data.SignalType, ItoA(data.Index), "set", Serial_TX[data.Index]);
+			CmdBuilder(data.SignalType, ItoA(data.Index), "setResponse", Serial_TX[data.Index]);
 		}
 	}
 }
@@ -298,8 +303,8 @@ function SocketRx() {
 	delimiter = "</DAS_transmission>";
 	delim_length = LEN(delimiter) - 1;
 
+	//dangerous loop. If delimiter is not found, this loop will never end.
     WHILE (LEN(InternalRxBuffer) > 1) {
-
 		Temp$ = REMOVE(delimiter, InternalRxBuffer);
     	Temp$ = LEFT(Temp$, (Len(Temp$) - delim_length));
 		Temp$ = Right(Temp$, (Len(Temp$) - (delim_length - 1)));
@@ -330,21 +335,21 @@ CHANGE Digital_TX
 {
 	INTEGER ID;
 	ID = GetLastModifiedArrayIndex();
-	CmdBuilder("digital", LtoA(ID), "event", LtoA(Digital_TX[ID]));
+	CmdBuilder("digital", ItoA(ID), "event", ItoA(Digital_TX[ID]));
 }
 
 CHANGE Analog_TX
 {
 	INTEGER ID;
 	ID = GetLastModifiedArrayIndex();
-	CmdBuilder("analog", LtoA(ID), "event", LtoA(Analog_TX[ID]));
+	CmdBuilder("analog", ItoA(ID), "event", ItoA(Analog_TX[ID]));
 }
 
 CHANGE Serial_TX
 {
 	INTEGER ID;
 	ID = GetLastModifiedArrayIndex();
-	CmdBuilder("serial", LtoA(ID), "event", Serial_TX[ID]);
+	CmdBuilder("serial", ItoA(ID), "event", Serial_TX[ID]);
 }
 
 
@@ -358,10 +363,11 @@ EVENT
 
 SOCKETCONNECT DAS_Server {
     doServerConnected = 1;
-    Print("OnConnect: input buffer size is: %d\n", Len(DAS_Server.SocketRxBuf));
+    TRACE("OnConnect: input buffer size is: %d\n", Len(DAS_Server.SocketRxBuf));
 }
 
 SOCKETDISCONNECT DAS_Server {
+	TRACE("Disconnected\n");
 	doServerConnected = 0;
 }
 
@@ -369,8 +375,8 @@ SOCKETSTATUS DAS_Server {
 	SIGNED_INTEGER Status;
     Status = SocketGetStatus();
 
-    Print("The SocketGetStatus returns:       %d\n", Status);
-    Print("The DAS_Server.SocketStatus returns: %d\n", DAS_Server.SocketStatus);
+    TRACE("The SocketGetStatus returns:       %d\n", Status);
+    TRACE("The DAS_Server.SocketStatus returns: %d\n", DAS_Server.SocketStatus);
 }
 
 SOCKETRECEIVE DAS_Server {
