@@ -16,11 +16,21 @@ async function run() {
 	crestron.on('error', console.error);
 	//called when data is read from the socket and ready to be used
 	crestron.on('data', d => receive_message(d));
+	var i = 1;
+	for(i = 1; i < 6; i++){
+		eventEmitter.on('digital:' + i + ':event', d => receive_event(d));
+	}
+	for(i = 1; i < 6; i++){
+		eventEmitter.on('analog:' + i + ':event', d => receive_event(d));
+	}
+	for(i = 1; i < 6; i++){
+		eventEmitter.on('serial:' + i + ':event', d => receive_event(d));
+	}
 
 	//function called when new data is read from "data" event
 	function receive_message(data){
 		//do something with data
-		console.log("Received data: ")
+		console.log("Received data: ");
 		//the JS object containing the transmission
 		console.log(data);
 		//the body of the transmission
@@ -40,6 +50,11 @@ async function run() {
 
 		//function that can be used to write a message back to crestron using the same JS object notation as above.
 		//crestron.write(data.DAS_transmission.body);
+	}
+
+	function receive_event(data){
+		console.log("Received event: ");
+		console.log(data);
 	}
 
 	//called when connected to Crestron from "connect" event
